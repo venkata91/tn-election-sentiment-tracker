@@ -1,6 +1,12 @@
 import pytest
 from ingest.base import RawPostData
-from pipeline.preprocessor import is_spam, detect_language, preprocess
+from pipeline.preprocessor import is_spam, detect_language, preprocess, _reset_seen_hashes
+
+@pytest.fixture(autouse=True)
+def reset_seen():
+    _reset_seen_hashes()
+    yield
+    _reset_seen_hashes()
 
 def _post(text: str, post_id: str = "1") -> RawPostData:
     return RawPostData(source="youtube", post_id=post_id, text=text)

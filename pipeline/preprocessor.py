@@ -1,9 +1,13 @@
 import hashlib
-from langdetect import detect, LangDetectException
+from langdetect import detect
 from typing import List
 from ingest.base import RawPostData
 
 _seen_hashes: set = set()
+
+def _reset_seen_hashes() -> None:
+    """Reset cross-batch dedup state. Call in tests to ensure isolation."""
+    _seen_hashes.clear()
 
 def _content_hash(text: str) -> str:
     return hashlib.md5(text.encode("utf-8")).hexdigest()
@@ -13,7 +17,7 @@ def detect_language(text: str) -> str:
         return "unknown"
     try:
         return detect(text)
-    except LangDetectException:
+    except Exception:
         return "unknown"
 
 def is_spam(text: str) -> bool:
