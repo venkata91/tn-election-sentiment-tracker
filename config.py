@@ -7,7 +7,8 @@ YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
 REDDIT_CLIENT_ID = os.getenv("REDDIT_CLIENT_ID")
 REDDIT_CLIENT_SECRET = os.getenv("REDDIT_CLIENT_SECRET")
 REDDIT_USER_AGENT = os.getenv("REDDIT_USER_AGENT", "elections-tracker/1.0")
-TELEGRAM_API_ID = int(os.getenv("TELEGRAM_API_ID", "0"))
+_raw_telegram_id = os.getenv("TELEGRAM_API_ID", "0").strip()
+TELEGRAM_API_ID = int(_raw_telegram_id) if _raw_telegram_id else 0
 TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///elections.db")
@@ -62,3 +63,14 @@ REDDIT_SEARCH_TERMS = [
     "DMK", "AIADMK", "Stalin", "Edappadi", "Annamalai",
     "Tamil Nadu election", "TN BJP",
 ]
+
+import warnings as _warnings
+_OPTIONAL_KEYS = {
+    "YOUTUBE_API_KEY": YOUTUBE_API_KEY,
+    "REDDIT_CLIENT_SECRET": REDDIT_CLIENT_SECRET,
+    "TELEGRAM_API_HASH": TELEGRAM_API_HASH,
+    "ANTHROPIC_API_KEY": ANTHROPIC_API_KEY,
+}
+for _name, _val in _OPTIONAL_KEYS.items():
+    if not _val:
+        _warnings.warn(f"{_name} is not set — related features will be unavailable.", stacklevel=2)
