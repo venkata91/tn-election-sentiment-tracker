@@ -4,7 +4,7 @@ from storage.models import Base
 from config import DATABASE_URL
 
 _engine = None
-_Session = None
+_SessionFactory = None
 
 def get_engine():
     global _engine
@@ -16,7 +16,7 @@ def init_db():
     Base.metadata.create_all(get_engine())
 
 def get_session():
-    global _Session
-    if _Session is None:
-        _Session = sessionmaker(bind=get_engine())
-    return _Session()
+    global _SessionFactory
+    if _SessionFactory is None:
+        _SessionFactory = sessionmaker(get_engine())
+    return _SessionFactory()
