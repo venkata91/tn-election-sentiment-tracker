@@ -62,21 +62,45 @@ def topic_heatmap(df: pd.DataFrame) -> go.Figure:
     fig.update_layout(title="Party × Topic Frequency")
     return fig
 
+def _sentiment_label(value: float) -> tuple:
+    """Return (label, bar_color) for a sentiment value."""
+    if value >= 0.15:
+        return "Positive", "#27ae60"
+    if value <= -0.15:
+        return "Negative", "#e74c3c"
+    return "Neutral", "#f39c12"
+
+
 def sentiment_gauge(party: str, value: float) -> go.Figure:
+    label, bar_color = _sentiment_label(value)
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=round(value, 2),
-        title={"text": party, "font": {"size": 14}},
-        number={"font": {"size": 18}},
+        title={
+            "text": f"<b>{party}</b><br><span style='font-size:11px;color:#555'>{label}</span>",
+            "font": {"size": 15},
+        },
+        number={"font": {"size": 22}, "valueformat": "+.2f"},
         gauge={
-            "axis": {"range": [-1, 1], "tickwidth": 1},
-            "bar": {"color": "#2ecc71" if value > 0 else "#e74c3c"},
+            "axis": {
+                "range": [-1, 1],
+                "tickvals": [-1, -0.5, 0, 0.5, 1],
+                "ticktext": ["-1", "-0.5", "0", "+0.5", "+1"],
+                "tickwidth": 1,
+                "tickfont": {"size": 9},
+            },
+            "bar": {"color": bar_color, "thickness": 0.25},
             "steps": [
-                {"range": [-1, -0.33], "color": "#ffcccc"},
-                {"range": [-0.33, 0.33], "color": "#ffffcc"},
-                {"range": [0.33, 1], "color": "#ccffcc"},
+                {"range": [-1, -0.15], "color": "#fde8e8"},
+                {"range": [-0.15, 0.15], "color": "#fef9e7"},
+                {"range": [0.15, 1], "color": "#e8f8e8"},
             ],
+            "threshold": {
+                "line": {"color": "#333", "width": 2},
+                "thickness": 0.75,
+                "value": 0,
+            },
         },
     ))
-    fig.update_layout(height=200, margin={"l": 10, "r": 10, "t": 40, "b": 10})
+    fig.update_layout(height=240, margin={"l": 20, "r": 20, "t": 60, "b": 10})
     return fig

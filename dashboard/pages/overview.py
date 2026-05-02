@@ -8,6 +8,12 @@ from dashboard.components.metrics import confidence_badge
 PARTIES = ["DMK+", "ADMK+", "TVK", "NTK"]
 
 st.title("TN Election 2026 — Sentiment Overview")
+st.info(
+    "**How to read:** Each gauge shows a **Sentiment Index** from **-1** (very negative public opinion) "
+    "to **+1** (very positive). Scores near **0** are neutral. "
+    "🔴 Red zone = negative, 🟡 Yellow = neutral, 🟢 Green = positive. "
+    "Powered by social media posts scored with XLM-RoBERTa."
+)
 
 session = get_session()
 today = date.today()

@@ -3,19 +3,13 @@ from typing import Tuple
 
 _classifier = None
 
-LABEL_TO_SCORE: dict[str, float] = {
-    "positive": 1.0,
-    "neutral": 0.0,
-    "negative": -1.0,
-}
-
 def _get_classifier():
     global _classifier
     if _classifier is None:
         _classifier = hf_pipeline(
             "sentiment-analysis",
             model="cardiffnlp/twitter-xlm-roberta-base-sentiment",
-            top_k=1,
+            top_k=3,
             truncation=True,
             max_length=512,
         )
@@ -24,12 +18,13 @@ def _get_classifier():
 def score_text(text: str) -> Tuple[float, float]:
     """
     Returns (sentiment_score, confidence) where:
-      sentiment_score: -1.0 (negative) to 1.0 (positive)
-      confidence: 0.0 to 1.0 (model softmax probability)
+      sentiment_score: probability-weighted score in [-1.0, +1.0]
+        = P(positive)*1.0 + P(neutral)*0.0 + P(negative)*(-1.0)
+      confidence: highest class probability (0.0 to 1.0)
     """
     classifier = _get_classifier()
-    result = classifier(text[:512])[0][0]
-    label = result["label"].lower()
-    confidence = float(result["score"])
-    score = LABEL_TO_SCORE.get(label, 0.0)
-    return score, confidence
+    results = classifier(text[:512])[0]  # list of 3 {label, score} dicts
+    probs = {r["label"].lower(): float(r["score"]) for r in results}
+    weighted = probs.get("positive", 0.0) - probs.get("negative", 0.0)
+    confidence = max(probs.values())
+    return round(weighted, 4), round(confidence, 4)

@@ -2,6 +2,8 @@ import logging
 from apscheduler.schedulers.blocking import BlockingScheduler
 from storage.db import init_db
 
+logging.getLogger("googleapiclient.http").setLevel(logging.ERROR)
+
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
@@ -16,9 +18,26 @@ def run_full_ingest():
     from pipeline.sentiment_model import score_text
     from storage.db import get_session
     from storage.models import RawPost, PartyMention, SentimentScore
+    from config import YOUTUBE_ENABLED, REDDIT_ENABLED, TELEGRAM_ENABLED
 
     session = get_session()
-    fetchers = [YouTubeFetcher(), RedditFetcher(), TelegramFetcher()]
+    fetchers = []
+    if YOUTUBE_ENABLED:
+        fetchers.append(YouTubeFetcher())
+    else:
+        log.warning("YouTube fetcher disabled (YOUTUBE_API_KEY not set)")
+    if REDDIT_ENABLED:
+        fetchers.append(RedditFetcher())
+    else:
+        log.warning("Reddit fetcher disabled (REDDIT_CLIENT_ID/SECRET not set)")
+    if TELEGRAM_ENABLED:
+        fetchers.append(TelegramFetcher())
+    else:
+        log.warning("Telegram fetcher disabled (TELEGRAM_API_ID/HASH not set)")
+
+    if not fetchers:
+        log.error("No fetchers configured — set at least one API key in .env")
+        return
     all_posts = []
 
     for fetcher in fetchers:
@@ -81,15 +100,19 @@ def run_trends_ingest():
     log.info(f"Google Trends: stored {n} records")
 
 def run_llm_judge():
+    from config import ANTHROPIC_ENABLED
+    if not ANTHROPIC_ENABLED:
+        log.warning("LLM judge disabled (ANTHROPIC_API_KEY not set)")
+        return
     from pipeline.llm_judge import sample_and_score
     n = sample_and_score(n=200)
     log.info(f"LLM judge: scored {n} posts")
 
 
 scheduler.add_job(run_full_ingest, "interval", hours=2, id="full_ingest")
+scheduler.add_job(run_llm_judge, "interval", hours=2, minutes=30, id="llm_judge")
 scheduler.add_job(run_aggregation, "interval", hours=1, id="aggregation")
 scheduler.add_job(run_trends_ingest, "interval", hours=6, id="trends_ingest")
-scheduler.add_job(run_llm_judge, "cron", hour=2, id="llm_judge")
 
 if __name__ == "__main__":
     init_db()

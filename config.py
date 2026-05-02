@@ -11,6 +11,11 @@ _raw_telegram_id = os.getenv("TELEGRAM_API_ID", "0").strip()
 TELEGRAM_API_ID = int(_raw_telegram_id) if _raw_telegram_id else 0
 TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+LLM_BACKEND = os.getenv("LLM_BACKEND", "ollama")   # "ollama" | "anthropic" | "openai"
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///elections.db")
 TARGET_STATE = os.getenv("TARGET_STATE", "TN")
 RESULTS_DAY = os.getenv("RESULTS_DAY", "false").lower() == "true"
@@ -46,12 +51,26 @@ PARTY_KEYWORDS = {
 }
 
 YOUTUBE_CHANNELS = {
-    # Verify channel IDs at youtube.com/@<handle> → About → Share → Copy channel ID
-    "thanthi_tv": "UCu6HHfxLzniTEGJhYnqpAew",
-    "sun_news": "UCn0QyOr3mNWNrFDzGJ5TnXA",
-    "puthiya_thalaimurai": "UCiJbpLSiQbRFxzUVD2k25cw",
-    "polimer_news": "UC9R3_MBmQKl8kGH4oY9byQA",
-    "news_j": "UC6GoBiRtfoBZZB3c2U9Q7zg",
+    # Verified channel IDs — confirm at youtube.com/@<handle> → Share → Copy channel ID
+    "thanthi_tv":         "UCu6HHfxLzniTEGJhYnqpAew",
+    "sun_news":           "UCn0QyOr3mNWNrFDzGJ5TnXA",
+    "puthiya_thalaimurai":"UCiJbpLSiQbRFxzUVD2k25cw",
+    "polimer_news":       "UC9R3_MBmQKl8kGH4oY9byQA",
+    "news_j":             "UC6GoBiRtfoBZZB3c2U9Q7zg",
+    # Additional Tamil news channels — verify IDs before enabling
+    "raj_tv":             "UCbEBg43vl8ZBhWYFYGMiK0Q",
+    "kalaignar_tv":       "UCcNEBFBjrWrATqOIhF6kMPg",
+    "captain_tv":         "UCVTTPpYPMiMiJh-yQoN1BEg",
+    "vendhar_tv":         "UCRWFSbif-RFENbBrSiez1DA",
+    "sathiyam_tv":        "UCXv4GFWRqZfMSuMSEZFOF0A",
+    # National English news channels
+    "india_today":        "UCYPvAwZP8pZhSMW8qs7cVCw",
+    "ndtv":               "UCZFMm1mMw0F81Z37aaEzTUA",
+    "times_now":          "UC6RJ7-PaXg6TIH2BzZfTV7w",
+    "republic_world":     "UCwqusr8YDwM-3mEYTDeJHzw",
+    "cnn_news18":         "UCef1-8eOpJgud7szVPlZQAQ",
+    "news18_india":       "UCPP3etACgdUWvizcES1dJ8Q",
+    "mirror_now":         "UCWCEYVwSqr7Epo6sSCfUgiw",
 }
 
 YOUTUBE_SEARCH_QUERIES = [
@@ -64,8 +83,19 @@ YOUTUBE_SEARCH_QUERIES = [
 ]
 
 TELEGRAM_CHANNELS = [
+    # Tamil news channels (broadcast — no join required)
+    "thanthitv",
+    "sunnewstamil",
+    "puthiyathalaimurai",
+    "polimernews",
+    "rajtvnews",
+    "kalaignartv",
+    # Political / commentary channels
     "tamilpoliticsnews",
     "tnpoliticsupdates",
+    "naamtamilar",          # NTK / Seeman updates
+    "tvkofficial",          # TVK / Vijay's party
+    "dmkofficialnews",      # DMK news
 ]
 
 REDDIT_SUBREDDITS = ["Chennai", "TamilNadu", "india"]
@@ -75,13 +105,18 @@ REDDIT_SEARCH_TERMS = [
     "Tamil Nadu election 2026",
 ]
 
+YOUTUBE_ENABLED = bool(YOUTUBE_API_KEY)
+REDDIT_ENABLED = bool(REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET)
+TELEGRAM_ENABLED = bool(TELEGRAM_API_ID and TELEGRAM_API_HASH)
+ANTHROPIC_ENABLED = bool(ANTHROPIC_API_KEY)
+
 import warnings as _warnings
-_OPTIONAL_KEYS = {
-    "YOUTUBE_API_KEY": YOUTUBE_API_KEY,
-    "REDDIT_CLIENT_SECRET": REDDIT_CLIENT_SECRET,
-    "TELEGRAM_API_HASH": TELEGRAM_API_HASH,
-    "ANTHROPIC_API_KEY": ANTHROPIC_API_KEY,
+_FLAGS = {
+    "YOUTUBE": (YOUTUBE_ENABLED, "YOUTUBE_API_KEY"),
+    "REDDIT": (REDDIT_ENABLED, "REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET"),
+    "TELEGRAM": (TELEGRAM_ENABLED, "TELEGRAM_API_ID + TELEGRAM_API_HASH"),
+    "ANTHROPIC (LLM judge)": (ANTHROPIC_ENABLED, "ANTHROPIC_API_KEY"),
 }
-for _name, _val in _OPTIONAL_KEYS.items():
-    if not _val:
-        _warnings.warn(f"{_name} is not set — related features will be unavailable.", stacklevel=2)
+for _source, (_ok, _keys) in _FLAGS.items():
+    if not _ok:
+        _warnings.warn(f"{_source} disabled — set {_keys} in .env to enable.", stacklevel=2)

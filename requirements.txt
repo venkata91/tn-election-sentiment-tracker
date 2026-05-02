@@ -1,4 +1,6 @@
 anthropic>=0.20.0
+ollama>=0.3.0
+openai>=1.0.0
 google-api-python-client>=2.0.0
 praw>=7.7.0
 telethon>=1.30.0
