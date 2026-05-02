@@ -1,27 +1,31 @@
 import streamlit as st
 import pandas as pd
 import json
-from datetime import date, timedelta
+from datetime import datetime, timedelta
 from storage.db import get_session
 from storage.models import HourlyAggregate, RawPost
 from dashboard.components.charts import source_stacked_bar
 
 st.title("Source Breakdown")
 
-session = get_session()
-rows = (
-    session.query(HourlyAggregate)
-    .filter(HourlyAggregate.state == "TN")
-    .filter(HourlyAggregate.hour >= date.today() - timedelta(days=7))
-    .all()
-)
+cutoff_dt = datetime.utcnow() - timedelta(days=7)
 
-lang_rows = (
-    session.query(RawPost.lang, RawPost.source)
-    .filter(RawPost.collected_at >= date.today() - timedelta(days=7))
-    .all()
-)
-session.close()
+session = get_session()
+try:
+    rows = (
+        session.query(HourlyAggregate)
+        .filter(HourlyAggregate.state == "TN")
+        .filter(HourlyAggregate.hour >= cutoff_dt)
+        .all()
+    )
+
+    lang_rows = (
+        session.query(RawPost.lang, RawPost.source)
+        .filter(RawPost.collected_at >= cutoff_dt)
+        .all()
+    )
+finally:
+    session.close()
 
 if not rows:
     st.info("No source data yet.")

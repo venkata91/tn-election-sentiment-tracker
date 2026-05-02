@@ -1,5 +1,5 @@
 import streamlit as st
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from storage.db import get_session
 from storage.models import TrendsDaily, RawPost, HourlyAggregate
 from dashboard.components.charts import sentiment_gauge
@@ -11,15 +11,18 @@ st.title("TN Election 2026 — Sentiment Overview")
 
 session = get_session()
 today = date.today()
+cutoff_dt = datetime.utcnow() - timedelta(days=1)
 
-rows = (
-    session.query(TrendsDaily)
-    .filter(TrendsDaily.state == "TN")
-    .filter(TrendsDaily.date >= today - timedelta(days=1))
-    .all()
-)
-total_posts_24h = session.query(RawPost).filter(RawPost.collected_at >= today - timedelta(days=1)).count()
-session.close()
+try:
+    rows = (
+        session.query(TrendsDaily)
+        .filter(TrendsDaily.state == "TN")
+        .filter(TrendsDaily.date >= today - timedelta(days=1))
+        .all()
+    )
+    total_posts_24h = session.query(RawPost).filter(RawPost.collected_at >= cutoff_dt).count()
+finally:
+    session.close()
 
 if not rows:
     st.info("No data yet. Run `python scheduler.py` to start collecting posts.")
