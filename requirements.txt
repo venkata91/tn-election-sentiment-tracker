@@ -1,0 +1,15 @@
+anthropic>=0.20.0
+google-api-python-client>=2.0.0
+praw>=7.7.0
+telethon>=1.30.0
+pytrends>=4.9.0
+transformers>=4.40.0
+torch>=2.0.0,<3.0.0
+sqlalchemy>=2.0.0
+streamlit>=1.35.0
+plotly>=5.20.0
+pandas>=2.0.0
+langdetect>=1.0.9
+apscheduler>=3.10.0
+python-dotenv>=1.0.0
+pytest>=8.0.0
