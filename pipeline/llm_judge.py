@@ -14,6 +14,14 @@ SENTIMENT_TO_SCORE: dict[str, float] = {
 
 _REQUIRED_FIELDS = {"party", "sentiment", "confidence", "topic"}
 
+_client: Optional[anthropic.Anthropic] = None
+
+def _get_client() -> anthropic.Anthropic:
+    global _client
+    if _client is None:
+        _client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    return _client
+
 def _build_prompt(text: str) -> str:
     return (
         "Analyze this Tamil Nadu political social media post. "
@@ -30,6 +38,8 @@ def _parse_response(raw: str) -> Optional[dict]:
         data = json.loads(raw.strip())
         if not _REQUIRED_FIELDS.issubset(data.keys()):
             return None
+        if data["sentiment"] not in ("positive", "negative", "neutral", "mixed"):
+            return None
         return data
     except (json.JSONDecodeError, ValueError):
         return None
@@ -37,39 +47,50 @@ def _parse_response(raw: str) -> Optional[dict]:
 def sample_and_score(n: int = 200) -> int:
     """Score up to n borderline posts via Claude API. Returns count successfully scored."""
     session = get_session()
-    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    try:
+        client = _get_client()
 
-    candidates = (
-        session.query(SentimentScore, RawPost)
-        .join(RawPost, SentimentScore.post_id == RawPost.id)
-        .filter(SentimentScore.llm_score.is_(None))
-        .filter(SentimentScore.model_confidence >= 0.40)
-        .filter(SentimentScore.model_confidence <= 0.65)
-        .order_by(RawPost.engagement.desc())
-        .limit(n)
-        .all()
-    )
+        candidates = (
+            session.query(SentimentScore, RawPost)
+            .join(RawPost, SentimentScore.post_id == RawPost.id)
+            .filter(SentimentScore.llm_score.is_(None))
+            .filter(SentimentScore.model_confidence >= 0.40)
+            .filter(SentimentScore.model_confidence <= 0.65)
+            .order_by(RawPost.engagement.desc())
+            .limit(n)
+            .all()
+        )
 
-    scored = 0
-    for score_row, post_row in candidates:
-        try:
-            message = client.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=150,
-                messages=[{"role": "user", "content": _build_prompt(post_row.text)}],
-            )
-            raw = message.content[0].text
-            data = _parse_response(raw)
-            if data is None:
+        scored = 0
+        for score_row, post_row in candidates:
+            try:
+                message = client.messages.create(
+                    model="claude-haiku-4-5-20251001",
+                    max_tokens=150,
+                    messages=[{"role": "user", "content": _build_prompt(post_row.text)}],
+                )
+                raw = message.content[0].text
+                data = _parse_response(raw)
+                if data is None:
+                    continue
+                if score_row.model_score is None:
+                    continue
+                score_row.llm_score = SENTIMENT_TO_SCORE.get(data["sentiment"], 0.0)
+                score_row.llm_confidence = data["confidence"]
+                score_row.topic = data["topic"]
+                score_row.final_score = (score_row.model_score * 0.4) + (score_row.llm_score * 0.6)
+                scored += 1
+            except anthropic.AuthenticationError:
+                raise
+            except anthropic.RateLimitError:
+                break
+            except Exception:
                 continue
-            score_row.llm_score = SENTIMENT_TO_SCORE.get(data["sentiment"], 0.0)
-            score_row.llm_confidence = data["confidence"]
-            score_row.topic = data["topic"]
-            score_row.final_score = (score_row.model_score * 0.4) + (score_row.llm_score * 0.6)
-            scored += 1
-        except Exception:
-            continue
 
-    session.commit()
-    session.close()
-    return scored
+        session.commit()
+        return scored
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
