@@ -5,7 +5,7 @@ from storage.models import TrendsDaily, RawPost, HourlyAggregate
 from dashboard.components.charts import sentiment_gauge
 from dashboard.components.metrics import confidence_badge
 
-PARTIES = ["DMK", "AIADMK", "BJP", "VCK", "PMK"]
+PARTIES = ["DMK+", "ADMK+", "TVK", "NTK"]
 
 st.title("TN Election 2026 — Sentiment Overview")
 

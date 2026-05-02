@@ -32,7 +32,7 @@ def roll_up_hourly(target_hour: Optional[datetime] = None) -> None:
     hour_start = target_hour.replace(minute=0, second=0, microsecond=0)
     hour_end = hour_start + timedelta(hours=1)
 
-    parties = ["DMK", "AIADMK", "BJP", "VCK", "PMK"]
+    parties = ["DMK+", "ADMK+", "TVK", "NTK"]
     for party in parties:
         rows = (
             session.query(SentimentScore, RawPost)
@@ -91,7 +91,7 @@ def roll_up_daily() -> None:
     session = get_session()
     today = date.today()
 
-    parties = ["DMK", "AIADMK", "BJP", "VCK", "PMK"]
+    parties = ["DMK+", "ADMK+", "TVK", "NTK"]
     for party in parties:
         rows = (
             session.query(HourlyAggregate)

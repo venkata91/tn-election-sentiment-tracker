@@ -5,7 +5,7 @@ from storage.db import get_session
 from storage.models import TrendsDaily
 from dashboard.components.charts import sentiment_timeline
 
-PARTIES = ["DMK", "AIADMK", "BJP", "VCK", "PMK"]
+PARTIES = ["DMK+", "ADMK+", "TVK", "NTK"]
 
 st.title("Party Sentiment Trends")
 

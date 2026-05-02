@@ -3,11 +3,10 @@ import pandas as pd
 import plotly.graph_objects as go
 
 PARTY_COLORS = {
-    "DMK": "#E41E20",
-    "AIADMK": "#00A651",
-    "BJP": "#FF671F",
-    "VCK": "#0066CC",
-    "PMK": "#FFD700",
+    "DMK+":  "#E41E20",   # DMK red
+    "ADMK+": "#FF671F",   # Saffron (BJP-led alliance)
+    "TVK":   "#7C3AED",   # Purple — new party
+    "NTK":   "#1F2937",   # Dark charcoal
 }
 
 def sentiment_timeline(df: pd.DataFrame, parties: List[str]) -> go.Figure:

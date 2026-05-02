@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from storage.db import get_session
 from storage.models import TrendsDaily
 
-PARTIES = ["DMK", "AIADMK", "BJP", "VCK", "PMK"]
+PARTIES = ["DMK+", "ADMK+", "TVK", "NTK"]
 TOTAL_SEATS = 234
 
 st.title("Results Day — Predicted vs. Actual")

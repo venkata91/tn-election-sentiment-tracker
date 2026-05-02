@@ -16,24 +16,32 @@ TARGET_STATE = os.getenv("TARGET_STATE", "TN")
 RESULTS_DAY = os.getenv("RESULTS_DAY", "false").lower() == "true"
 
 PARTY_KEYWORDS = {
-    "DMK": [
+    "DMK+": [
+        # DMK core
         "dmk", "திமுக", "#dmk", "mkstalin", "mk stalin", "stalin",
-        "உதயநிதி", "udhayanidhi", "tr baalu", "duraimurugan",
+        "உதயநிதி", "udhayanidhi", "duraimurugan", "tr baalu",
+        # Alliance partners (VCK, Congress, Left)
+        "vck", "திருமாவளவன்", "thirumavalavan", "thiruma",
+        "dmk alliance", "dmk அணி", "இந்திய கூட்டணி",
     ],
-    "AIADMK": [
-        "aiadmk", "அதிமுக", "#aiadmk", "eps", "edappadi", "palaniswami",
-        "இபிஎஸ்", "o panneerselvam", "ops",
-    ],
-    "BJP": [
-        "bjp", "பாஜக", "#bjp", "annamalai", "அண்ணாமலை", "modi",
-        "நரேந்திர மோடி", "tamilnadu bjp", "tamilisai",
-    ],
-    "VCK": [
-        "vck", "விடுதலை சிறுத்தைகள்", "thirumavalavan", "thiruma",
-        "திருமாவளவன்",
-    ],
-    "PMK": [
+    "ADMK+": [
+        # AIADMK core
+        "aiadmk", "admk", "அதிமுக", "#aiadmk", "eps", "edappadi", "palaniswami",
+        "இபிஎஸ்", "எடப்பாடி",
+        # BJP alliance
+        "bjp", "பாஜக", "#bjp", "annamalai", "அண்ணாமலை", "tamilisai",
+        # PMK (likely with ADMK+)
         "pmk", "பாமக", "ramadoss", "anbumani", "அன்புமணி",
+        "nda", "nda tamil",
+    ],
+    "TVK": [
+        "tvk", "தமிழக வெற்றி கழகம்", "#tvk",
+        "vijay", "விஜய்", "thalapathy vijay", "தலபதி விஜய்", "thalapathy",
+        "actor vijay", "விஜய் கட்சி",
+    ],
+    "NTK": [
+        "ntk", "நாம் தமிழர்", "நாம் தமிழர் கட்சி", "#ntk",
+        "seeman", "சீமான்", "naam tamilar",
     ],
 }
 
@@ -47,10 +55,12 @@ YOUTUBE_CHANNELS = {
 }
 
 YOUTUBE_SEARCH_QUERIES = [
-    "தமிழ்நாடு தேர்தல்",
+    "தமிழ்நாடு தேர்தல் 2026",
     "TN election 2026",
-    "DMK AIADMK BJP Tamil Nadu",
-    "Stalin Annamalai EPS election",
+    "DMK ADMK TVK NTK Tamil Nadu",
+    "Stalin Edappadi Vijay Seeman election",
+    "தலபதி விஜய் TVK",
+    "சீமான் NTK தேர்தல்",
 ]
 
 TELEGRAM_CHANNELS = [
@@ -60,8 +70,9 @@ TELEGRAM_CHANNELS = [
 
 REDDIT_SUBREDDITS = ["Chennai", "TamilNadu", "india"]
 REDDIT_SEARCH_TERMS = [
-    "DMK", "AIADMK", "Stalin", "Edappadi", "Annamalai",
-    "Tamil Nadu election", "TN BJP",
+    "DMK", "AIADMK", "TVK", "NTK", "Seeman",
+    "Stalin", "Edappadi", "Vijay TVK", "Thalapathy Vijay politics",
+    "Tamil Nadu election 2026",
 ]
 
 import warnings as _warnings
