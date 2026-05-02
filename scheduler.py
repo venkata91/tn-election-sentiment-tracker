@@ -33,37 +33,42 @@ def run_full_ingest():
     log.info(f"After preprocessing: {len(clean)} posts")
     saved = 0
 
-    for post_data in clean:
-        if session.query(RawPost).filter_by(post_id=post_data.post_id).first():
-            continue
-        raw = RawPost(
-            source=post_data.source,
-            post_id=post_data.post_id,
-            text=post_data.text,
-            url=post_data.url,
-            lang=post_data.lang,
-            author=post_data.author,
-            engagement=post_data.engagement,
-            posted_at=post_data.posted_at,
-        )
-        session.add(raw)
-        session.flush()
+    try:
+        for post_data in clean:
+            if session.query(RawPost).filter_by(post_id=post_data.post_id).first():
+                continue
+            raw = RawPost(
+                source=post_data.source,
+                post_id=post_data.post_id,
+                text=post_data.text,
+                url=post_data.url,
+                lang=post_data.lang,
+                author=post_data.author,
+                engagement=post_data.engagement,
+                posted_at=post_data.posted_at,
+            )
+            session.add(raw)
+            session.flush()
 
-        for party, mention_type in extract_mentions(post_data.text):
-            model_score, model_confidence = score_text(post_data.text)
-            session.add(PartyMention(post_id=raw.id, party=party, mention_type=mention_type))
-            session.add(SentimentScore(
-                post_id=raw.id,
-                party=party,
-                model_score=model_score,
-                model_confidence=model_confidence,
-                final_score=model_score,
-            ))
-        saved += 1
+            for party, mention_type in extract_mentions(post_data.text):
+                model_score, model_confidence = score_text(post_data.text)
+                session.add(PartyMention(post_id=raw.id, party=party, mention_type=mention_type))
+                session.add(SentimentScore(
+                    post_id=raw.id,
+                    party=party,
+                    model_score=model_score,
+                    model_confidence=model_confidence,
+                    final_score=model_score,
+                ))
+            saved += 1
 
-    session.commit()
-    session.close()
-    log.info(f"Saved {saved} new posts")
+        session.commit()
+        log.info(f"Saved {saved} new posts")
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 def run_aggregation():
     from pipeline.aggregator import roll_up_hourly, roll_up_daily
