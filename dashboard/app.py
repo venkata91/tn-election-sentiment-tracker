@@ -4,6 +4,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import streamlit as st
 from config import RESULTS_DAY
+from storage.db import init_db
+
+init_db()
 
 st.set_page_config(
     page_title="TN Election 2026 Tracker",
