@@ -30,18 +30,21 @@ class RedditFetcher(BaseFetcher):
                                 engagement=submission.score,
                                 posted_at=datetime.utcfromtimestamp(submission.created_utc),
                             ))
-                        submission.comments.replace_more(limit=0)
-                        for comment in submission.comments.list()[:15]:
-                            if len(comment.body) > 20:
-                                posts.append(RawPostData(
-                                    source="reddit",
-                                    post_id=f"comment_{comment.id}",
-                                    text=comment.body,
-                                    url=f"https://reddit.com{submission.permalink}",
-                                    author=str(comment.author) if comment.author else None,
-                                    engagement=comment.score,
-                                    posted_at=datetime.utcfromtimestamp(comment.created_utc),
-                                ))
+                        try:
+                            submission.comments.replace_more(limit=0)
+                            for comment in submission.comments.list()[:15]:
+                                if len(comment.body) > 20:
+                                    posts.append(RawPostData(
+                                        source="reddit",
+                                        post_id=f"comment_{comment.id}",
+                                        text=comment.body,
+                                        url=f"https://reddit.com{submission.permalink}",
+                                        author=str(comment.author) if comment.author else None,
+                                        engagement=comment.score,
+                                        posted_at=datetime.utcfromtimestamp(comment.created_utc),
+                                    ))
+                        except Exception:
+                            pass
                 except Exception:
                     continue
         return posts

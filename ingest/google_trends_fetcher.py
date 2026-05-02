@@ -20,17 +20,19 @@ def fetch_and_store() -> int:
     today = date.today()
     count = 0
 
-    for party in _TREND_TERMS:
-        if party not in df.columns:
-            continue
-        value = int(df[party].iloc[-1])
-        existing = session.query(SearchInterest).filter_by(party=party, date=today).first()
-        if existing:
-            existing.interest_value = value
-        else:
-            session.add(SearchInterest(party=party, date=today, interest_value=value, geo="IN-TN"))
-        count += 1
+    try:
+        for party in _TREND_TERMS:
+            if party not in df.columns:
+                continue
+            value = int(df[party].iloc[-1])
+            existing = session.query(SearchInterest).filter_by(party=party, date=today).first()
+            if existing:
+                existing.interest_value = value
+            else:
+                session.add(SearchInterest(party=party, date=today, interest_value=value, geo="IN-TN"))
+            count += 1
 
-    session.commit()
-    session.close()
-    return count
+        session.commit()
+        return count
+    finally:
+        session.close()
